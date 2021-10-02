@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pkill -f /dev/video0 || mpv /dev/video0

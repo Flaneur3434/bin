@@ -1,0 +1,11 @@
+#!/bin/sh
+delayAudio ()
+{
+	read -e -p "Which recording: " var1
+	ffmpeg -i "$var1" -itsoffset 2.5 \
+		   -i "$var1" \
+		   -map 1:v -map 0:a -c copy \
+		   "${var1}_delayed.mp4"
+}
+
+delayAudio
