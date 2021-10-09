@@ -7,6 +7,6 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains 9p.io \
+ --domains 9lab.org \
  --no-parent \
-https://9p.io/sys/man/index.html
+https://9lab.org/
