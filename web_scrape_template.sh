@@ -7,6 +7,6 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains 9lab.org \
+ --domains granivo.re \
  --no-parent \
-https://9lab.org/
+https://granivo.re/plan9/
