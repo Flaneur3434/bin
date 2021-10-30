@@ -7,6 +7,6 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains granivo.re \
+ --domains ueber.net \
  --no-parent \
-https://granivo.re/plan9/
+https://www.ueber.net/who/mjl/plan9/plan9-obsd.html
