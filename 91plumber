@@ -18,7 +18,7 @@ case $item in
         sel=$(printf "zathura\n" | 91menu)
         [ "$sel" = "zathura" ] && $(zathura "$item" &>/dev/null)
         ;;
-	*:+([0-9])*([:]) | *:+([0-9]):+([0-9]):)
+	*:+([0-9]):)
 		sel=$(printf "emacs\nacme\ncat\n" | 91menu)
 		[ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
 		[ "$sel" = "emacs" ] && emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
@@ -30,6 +30,12 @@ case $item in
 		[ "$sel" = "brave" ] && brave "$item"
 		[ "$sel" = "palemoon" ] && palemoon "$item"
 		[ "$sel" = "edit" ] && emacsclient -c "$item"
+		;;
+	*:*)
+		sel=$(printf "emacs\nacme\ncat\n" | 91menu)
+		[ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s", $1}')"
+		[ "$sel" = "emacs" ] && emacsclient -c $(echo $item | awk -F: '{print $1}')
+        [ "$sel" = "cat" ] && cat $(echo $item | awk -F: '{print $1}')
 		;;
     *)
         sel=$(printf "cd\nacme\nemacs\ncat\n" | 91menu)

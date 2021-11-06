@@ -7,6 +7,6 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains ueber.net \
+ --domains pkg.go.dev \
  --no-parent \
-https://www.ueber.net/who/mjl/plan9/plan9-obsd.html
+https://pkg.go.dev/9fans.net/go@v0.0.4/acme

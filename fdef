@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# fdef <...>
+
+# Where is current function, method, class, etc... defined using ctags
+# Ex:
+# Watch -x=TAGS ctags -f TAGS -R -n --languages=Java <root-folder>/*
+
+old_path="$PWD"
+
+while [[ ! -f TAGS && "$PWD" != "$HOME" ]]; do
+    cd ..
+done
+
+if [[ -f TAGS ]]; then
+    path="$PWD"
+    readtags -t TAGS $1 | awk -F "\t" -v prefix="$path" '{$2 = prefix"/"$2; print $2":"$3}'
+else
+	echo "could not find tag file in $old_path"
+	echo "create tag by running ctags -f TAGS -R -n --languages=LANG *"
+fi

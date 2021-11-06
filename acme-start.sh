@@ -1,30 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 
-# BROWSER=chrome
 # PLUMBFILE=$HOME/lib/plumbing
-#export font=/mnt/font/Cousine/8a/font
-# export font='/mnt/font/LucidaGrande/16a/font'
-tabstop=4
-SHELL=$PLAN9/bin/rc
-acmeshell=$PLAN9/bin/rc
+export SHELL=$PLAN9/bin/rc
+export acmeshell=$PLAN9/bin/rc
+export TERM=dumb
+export PAGER=nobs
+export BROWSER=chrome
 
-# TERM=dumb
-# MANPAGER=nobs
-# PAGER=nobs
-# EDITOR=E
+font='/mnt/font/GoMono/10a/font'
+# font='/mnt/font/LucidaGrande/16a/font'
 
-# PLAN9=/usr/local/plan9
-# PATH=$PATH:$PLAN9/bin
-# MANPATH=$MANPATH:$PLAN9/man
+if [ -z "$(pgrep fontsrv)" ]; then
+	 echo "run fontsrv"
+	 fontsrv &
+fi
 
-# export BROWSER TERM MANPAGER \
-# PAGER EDITOR PLAN9 PATH MANPATH SHELL
-# unset FCEDIT VISUAL
-
-export tabstop acmeshell SHELL
-
-# [ -z "$(pgrep fontsrv)" ] && fontsrv;
-# [ -z "$(pgrep plumber)" ] && plumber;
+# [ -z "$(pgrep plumber)" ] && plumber &
 
 # if [ -f "$PLUMBFILE" ]; then
 # 	cat "$PLUMBFILE" | 9p write plumb/rules
@@ -32,4 +23,4 @@ export tabstop acmeshell SHELL
 # 	cat $PLAN9/plumb/basic | 9p write plumb/rules
 # fi
 
-acme $1
+acme -a -f $font $1
