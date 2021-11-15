@@ -3,6 +3,56 @@
 item=$(xclip -o -selection primary)
 directory=$PWD
 
+find_dir () 
+{
+  # get root directory /home/$USER/????/
+  curr_dir=$(echo $PWD | awk -F / '{print $4}')
+
+  # if /home/$USER/
+  if [[ $curr_dir != "" ]]; then
+    list_dir=$(walk /home/$USER/$curr_dir | grep "$1$")
+  else 
+    list_dir=$(walk /home/$USER | grep "$1$")
+  fi
+
+  list_true_dir=""
+  local IFS=$'\n'
+  for item in $list_dir; do
+    is_dir=$(ls -ld "$item" | grep "^d" | awk '{print $9}')
+    if [[ ! -z "$is_dir" ]]; then
+      list_true_dir+="$is_dir\n"
+    fi
+  done
+
+  sel=$(printf "$list_true_dir" | 91menu) && cd "$sel"
+}
+
+find_whatever ()
+{
+  # get root directory /home/$USER/????/
+  curr_dir=$(echo $PWD | awk -F / '{print $4}')
+
+  # if /home/$USER/
+  if [[ $curr_dir != "" ]]; then
+    list_dir=$(walk /home/$USER/$curr_dir | grep "$1$")
+  else 
+    list_dir=$(walk /home/$USER | grep "$1$")
+  fi
+
+  sel=$(printf "$list_dir" | 91menu)
+
+  is_dir=$(ls -ld "$sel" | grep "^d" | awk '{print $9}')
+  if [[ ! -z "$is_dir" ]]; then
+    cd $is_dir
+  else
+    sel_editor=$(printf "acme\nemacs\nvim\ncat\n" | 91menu)
+    [ "$sel_editor" = "acme" ] && acme-start.sh "$sel"
+    [ "$sel_editor" = "emacs" ] && emacsclient -c "$sel"
+    [ "$sel_editor" = "vim" ] && vim "$sel"
+    [ "$sel_editor" = "cat" ] && cat "$sel"
+  fi
+}
+
 case $item in
     *\.jpg | *\.png)
         sel=$(printf "sxiv\npage\nfeh" | 91menu)
@@ -19,31 +69,30 @@ case $item in
         [ "$sel" = "zathura" ] && $(zathura "$item" &>/dev/null)
         ;;
 	*:+([0-9]):)
-		sel=$(printf "emacs\nacme\ncat\n" | 91menu)
-		[ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
-		[ "$sel" = "emacs" ] && emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
+		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
+		    [ "$sel" = "emacs" ] && emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
+		    [ "$sel" = "vim" ] && vim +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
+		    [ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
         [ "$sel" = "cat" ] && cat -n $(echo $item | awk -F: '{print $1}') | rg -C10 "^ *$(echo $item | awk -F: '{print $2}')"
-		;;
+		    ;;
 	*\.html | *\.css)
-		sel=$(printf "firefox\nbrave\npalemoon\nedit\n" | 91menu)
-		[ "$sel" = "firefox" ] && librewolf "$item"
-		[ "$sel" = "brave" ] && brave "$item"
-		[ "$sel" = "palemoon" ] && palemoon "$item"
-		[ "$sel" = "edit" ] && emacsclient -c "$item"
-		;;
+		    sel=$(printf "firefox\nbrave\npalemoon\nedit\n" | 91menu)
+		    [ "$sel" = "firefox" ] && librewolf "$item"
+		    [ "$sel" = "brave" ] && brave "$item"
+		    [ "$sel" = "palemoon" ] && palemoon "$item"
+		    [ "$sel" = "edit" ] && emacsclient -c "$item"
+		    ;;
 	*:*)
-		sel=$(printf "emacs\nacme\ncat\n" | 91menu)
-		[ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s", $1}')"
-		[ "$sel" = "emacs" ] && emacsclient -c $(echo $item | awk -F: '{print $1}')
+		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
+		    [ "$sel" = "emacs" ] && emacsclient -c $(echo $item | awk -F: '{print $1}')
+		    [ "$sel" = "vim" ] && vim $(echo $item | awk -F: '{print $1}')
+		    [ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s", $1}')"
         [ "$sel" = "cat" ] && cat $(echo $item | awk -F: '{print $1}')
-		;;
+		    ;;
     *)
-        sel=$(printf "cd\nacme\nemacs\ncat\n" | 91menu)
-        [ "$sel" = "cd" ] && cd "$item"
-        [ "$sel" = "acme" ] && acme-start.sh "$item"
-        [ "$sel" = "emacs" ] && emacsclient -c "$item"
-        [ "$sel" = "cat" ] && cat "$item"
+        find_whatever "$item"
 esac
+
 
 unset item
 unset directory
