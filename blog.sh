@@ -1,6 +1,6 @@
 #!/bin/bash
 # Enter src location
-location="/home/ken_nc/Videos/.private/blog_list"
+location="/home/ken_nc/Downloads/importantDocuments/blog_list"
 
 no_tail(){
     read -e -p "What will you blog about: " var1

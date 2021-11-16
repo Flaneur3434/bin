@@ -1,0 +1,24 @@
+#!/bin/sh
+recording()
+{
+	read -e -p "Name: " video_name 
+
+  slop -f "%x %y %w %h" > /tmp/slop
+	read -r X Y W H < /tmp/slop
+	rm /tmp/slop
+
+	ffmpeg \
+	-f pulse -ac 2 -ar 48000 -i alsa_input.pci-0000_00_1f.3.analog-stereo \
+	-f pulse -ac 2 -ar 48000 -i alsa_output.pci-0000_00_1f.3.analog-stereo.monitor \
+ 	-filter_complex amix=inputs=2 \
+	-f x11grab \
+	-video_size "$W"x"$H" \
+	-i :0.0+"$X,$Y" \
+ 	-vcodec libx264 -preset veryfast -crf 18 \
+  -acodec libmp3lame -ar 48000 -q:a 1 \
+	-pix_fmt yuv420p \
+	"$video_dir/box-$(date '+%y%m%d-%H%M-%S').mp4" &
+	echo $! > /tmp/recordingpid
+}
+
+recording

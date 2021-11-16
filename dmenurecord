@@ -23,63 +23,23 @@ killrecording() {
 	}
 
 screencast() { \
-	ffmpeg -y \
+  ffmpeg -y \
+  -thread_queue_size 32 \
 	-f x11grab \
-	-framerate 60 \
+	-framerate 30 \
 	-s "$(xdpyinfo | awk '/dimensions/ {print $2;}')" \
 	-i "$DISPLAY" \
 	-f alsa -i default \
-	-r 30 \
  	-c:v h264 -crf 0 -preset ultrafast -c:a aac \
 	"$video_dir/screencast-$(date '+%y%m%d-%H%M-%S').mp4" &
 	echo $! > /tmp/recordingpid
 }
 
-video() {
-	ffmpeg \
-	-f x11grab \
-	-s "$(xdpyinfo | awk '/dimensions/ {print $2;}')" \
-	-i "$DISPLAY" \
- 	-c:v libx264 -qp 0 -r 30 \
-	"$video_dir/video-$(date '+%y%m%d-%H%M-%S').mkv" &
-	echo $! > /tmp/recordingpid
-}
-
-webcamhidef() {
-	ffmpeg \
-	-f v4l2 \
-	-i /dev/video0 \
-	-video_size 1920x1080 \
-	"$video_dir/webcam-$(date '+%y%m%d-%H%M-%S').mkv" &
-	echo $! > /tmp/recordingpid
-}
-
-webcam() {
-	ffmpeg \
-	-f v4l2 \
-	-i /dev/video0 \
-	-video_size 640x480 \
-	"$video_dir/webcam-$(date '+%y%m%d-%H%M-%S').mkv" &
-	echo $! > /tmp/recordingpid
-}
-
-audio() { \
-	ffmpeg \
-	-f alsa -i default \
-	-c:a flac \
-	"$video_dir/audio-$(date '+%y%m%d-%H%M-%S').flac" &
-	echo $! > /tmp/recordingpid
-}
-
 askrecording() { \
-	choice=$(printf "screencast\\nvideo\\nvideo selected\\naudio\\nwebcam\\nwebcam (hi-def)" | dmenu -i -p "Select recording style:")
+	choice=$(printf "screencast\\nvideo selected" | dmenu -i -p "Select recording style:")
 	case "$choice" in
 		screencast) screencast;;
-		audio) audio;;
-		video) video;;
 		*selected) videoselected;;
-		webcam) webcam;;
-		"webcam (hi-def)") webcamhidef;;
 	esac
 	}
 
@@ -94,26 +54,29 @@ videoselected()
 	read -r X Y W H < /tmp/slop
 	rm /tmp/slop
 
-	ffmpeg \
-	-f pulse -ac 2 -ar 48000 -i alsa_input.pci-0000_00_1f.3.analog-stereo \
-	-f pulse -ac 2 -ar 48000 -i alsa_output.pci-0000_00_1f.3.analog-stereo.monitor \
- 	-filter_complex amix=inputs=2 \
+  X=$((X/2*2))
+  Y=$((Y/2*2))
+  W=$((W/2*2))
+  H=$((H/2*2))
+
+	ffmpeg -y\
+  -thread_queue_size 64 \
 	-f x11grab \
-	-framerate 30 \
-	-video_size "$W"x"$H" \
+  -framerate 30 \
+  -video_size "$W"x"$H" \
 	-i :0.0+"$X,$Y" \
-	-c:v libx264 -qp 0 -r 30 \
- 	-acodec libmp3lame -ar 48000 -q:a 1 \
+	-f pulse -ac 2 -ar 48000 -i alsa_output.pci-0000_00_1f.3.analog-stereo.monitor \
+	-f pulse -ac 2 -ar 48000 -i alsa_input.pci-0000_00_1f.3.analog-stereo \
+ 	-vcodec libx264 -preset ultrafast -crf 24 \
+  -acodec libmp3lame -ar 48000 -q:a 1 \
 	-pix_fmt yuv420p \
-	-threads 4 \
+  -filter_complex amix=inputs=2 \
 	"$video_dir/box-$(date '+%y%m%d-%H%M-%S').mp4" &
 	echo $! > /tmp/recordingpid
 }
 
 case "$1" in
 	screencast) screencast;;
-	audio) audio;;
-	video) video;;
 	*selected) videoselected;;
 	kill) killrecording;;
 	*) ([ -f /tmp/recordingpid ] && asktoend && exit) || askrecording;;
