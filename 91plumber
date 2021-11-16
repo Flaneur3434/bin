@@ -89,10 +89,10 @@ case $item in
     *)
     		sel=$(printf "cd\nemacs\nvim\nacme\ncat\n" | 91menu)
         [ "$sel" = "cd" ] && find_whatever "$item"
-        [ "$sel" = "acme" ] && acme-start.sh "$sel"
-        [ "$sel" = "emacs" ] && emacsclient -c "$sel"
-        [ "$sel" = "vim" ] && vim "$sel"
-        [ "$sel" = "cat" ] && cat "$sel"
+        [ "$sel" = "acme" ] && acme-start.sh "$item"
+        [ "$sel" = "emacs" ] && emacsclient -c "$item"
+        [ "$sel" = "vim" ] && vim "$item"
+        [ "$sel" = "cat" ] && cat "$item"
 esac
 
 
