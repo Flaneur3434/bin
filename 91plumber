@@ -45,11 +45,7 @@ find_whatever ()
   if [[ ! -z "$is_dir" ]]; then
     cd $is_dir
   else
-    sel_editor=$(printf "acme\nemacs\nvim\ncat\n" | 91menu)
-    [ "$sel_editor" = "acme" ] && acme-start.sh "$sel"
-    [ "$sel_editor" = "emacs" ] && emacsclient -c "$sel"
-    [ "$sel_editor" = "vim" ] && vim "$sel"
-    [ "$sel_editor" = "cat" ] && cat "$sel"
+    printf "not a directory" | 91menu 1>/dev/null
   fi
 }
 
@@ -65,8 +61,9 @@ case $item in
         [ "$sel" = "mpv" ] && $(mpv "$item" &>/dev/null)
         ;;
     *\.pdf | *\.epub)
-        sel=$(printf "zathura\n" | 91menu)
+        sel=$(printf "zathura\nmupdf" | 91menu)
         [ "$sel" = "zathura" ] && $(zathura "$item" &>/dev/null)
+        [ "$sel" = "mupdf" ] && $(mupdf "$item" &>/dev/null)
         ;;
 	*:+([0-9]):)
 		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
@@ -90,7 +87,12 @@ case $item in
         [ "$sel" = "cat" ] && cat $(echo $item | awk -F: '{print $1}')
 		    ;;
     *)
-        find_whatever "$item"
+    		sel=$(printf "cd\nemacs\nvim\nacme\ncat\n" | 91menu)
+        [ "$sel" = "cd" ] && find_whatever "$item"
+        [ "$sel" = "acme" ] && acme-start.sh "$sel"
+        [ "$sel" = "emacs" ] && emacsclient -c "$sel"
+        [ "$sel" = "vim" ] && vim "$sel"
+        [ "$sel" = "cat" ] && cat "$sel"
 esac
 
 
