@@ -3,49 +3,25 @@
 item=$(xclip -o -selection primary)
 directory=$PWD
 
-find_dir () 
-{
-  # get root directory /home/$USER/????/
-  curr_dir=$(echo $PWD | awk -F / '{print $4}')
-
-  # if /home/$USER/
-  if [[ $curr_dir != "" ]]; then
-    list_dir=$(walk /home/$USER/$curr_dir | grep "$1$")
-  else 
-    list_dir=$(walk /home/$USER | grep "$1$")
-  fi
-
-  list_true_dir=""
-  local IFS=$'\n'
-  for item in $list_dir; do
-    is_dir=$(ls -ld "$item" | grep "^d" | awk '{print $9}')
-    if [[ ! -z "$is_dir" ]]; then
-      list_true_dir+="$is_dir\n"
-    fi
-  done
-
-  sel=$(printf "$list_true_dir" | 91menu) && cd "$sel"
-}
-
 find_whatever ()
 {
   # get root directory /home/$USER/????/
   curr_dir=$(echo $PWD | awk -F / '{print $4}')
 
-  # if /home/$USER/
+  # if current dir is not /home/$USER/
   if [[ $curr_dir != "" ]]; then
     list_dir=$(walk /home/$USER/$curr_dir | grep "$1$")
   else 
-    list_dir=$(walk /home/$USER | grep "$1$")
+    if ls -ld "$1" | grep -q "^d" ; then
+      cd $1
+    fi
+    return
   fi
 
   sel=$(printf "$list_dir" | 91menu)
 
-  is_dir=$(ls -ld "$sel" | grep "^d" | awk '{print $9}')
-  if [[ ! -z "$is_dir" ]]; then
-    cd $is_dir
-  else
-    printf "not a directory" | 91menu 1>/dev/null
+  if ls -ld "$sel" | grep -q "^d" ; then
+    cd $sel
   fi
 }
 
@@ -65,7 +41,7 @@ case $item in
         [ "$sel" = "zathura" ] && $(zathura "$item" &>/dev/null)
         [ "$sel" = "mupdf" ] && $(mupdf "$item" &>/dev/null)
         ;;
-	*:+([0-9]):)
+	*:+[0-9]:)
 		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
 		    [ "$sel" = "emacs" ] && emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
 		    [ "$sel" = "vim" ] && vim +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
@@ -73,11 +49,10 @@ case $item in
         [ "$sel" = "cat" ] && cat -n $(echo $item | awk -F: '{print $1}') | rg -C10 "^ *$(echo $item | awk -F: '{print $2}')"
 		    ;;
 	*\.html | *\.css)
-		    sel=$(printf "firefox\nbrave\npalemoon\nedit\n" | 91menu)
-		    [ "$sel" = "firefox" ] && librewolf "$item"
-		    [ "$sel" = "brave" ] && brave "$item"
-		    [ "$sel" = "palemoon" ] && palemoon "$item"
-		    [ "$sel" = "edit" ] && emacsclient -c "$item"
+		    sel=$(printf "firefox\nchromium\nnedit\n" | 91menu)
+		    [ "$sel" = "firefox" ] && librewolf "$item" 1>/dev/null 2>/dev/null
+		    [ "$sel" = "chromium" ] && chromium "$item" 1>/dev/null 2>/dev/null 
+		    [ "$sel" = "edit" ] && emacsclient -c "$item" 
 		    ;;
 	*:*)
 		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
