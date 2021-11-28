@@ -71,7 +71,7 @@ create_symbols (){
     b
     
     :link_wrap
-    s/(link )(.* )(.*)/<a href=\"\2\">\3<\/a>/
+    s/(link )(https*:\/\/[a-zA-z.]+\/+)(.*)/<a href=\"\2\">\3<\/a>/
     b
     
     :picture_wrap
@@ -83,8 +83,17 @@ create_symbols (){
     b
 
     :list_wrap
+    /(.*link.*)/ b link_in_list
+    /(.*picture.*)/ b picture_in_list
+    :jmp_back_2_list_wrap
     s/(^\* )(.*)/<li>\2<\/li>/
     b
+
+    :link_in_list
+    s/(^\* )(link )(https*:\/\/[a-zA-z.]+\/+)(.*)/\1<a href=\"\3\">\4<\/a>/
+    b jmp_back_2_list_wrap
+
+    :picture_in_list
 
     ' "$1"
 }
