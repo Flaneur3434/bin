@@ -7,6 +7,6 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains pkg.go.dev \
+ --domains openbsdrouterguide.net \
  --no-parent \
-https://pkg.go.dev/9fans.net/go@v0.0.4/acme
+https://openbsdrouterguide.net/

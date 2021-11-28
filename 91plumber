@@ -41,6 +41,10 @@ case $item in
         [ "$sel" = "zathura" ] && $(zathura "$item" &>/dev/null)
         [ "$sel" = "mupdf" ] && $(mupdf "$item" &>/dev/null)
         ;;
+    *\.chm)
+        sel=$(printf "xchm" | 91menu)
+        [ "$sel" = "xchm" ] && $(xchm "$1" 2>/dev/null)
+        ;;
     *:+([0-9]):*([0-9])*([:]))
 		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
 		    [ "$sel" = "emacs" ] && emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
@@ -49,10 +53,10 @@ case $item in
         [ "$sel" = "cat" ] && cat -n $(echo $item | awk -F: '{print $1}') | rg -C10 "^ *$(echo $item | awk -F: '{print $2}')"
 		    ;;
 	  *\.html | *\.css)
-		    sel=$(printf "firefox\nchromium\nnedit\n" | 91menu)
+		    sel=$(printf "firefox\nchromium\nedit\n" | 91menu)
 		    [ "$sel" = "firefox" ] && librewolf "$item" 1>/dev/null 2>/dev/null
 		    [ "$sel" = "chromium" ] && chromium "$item" 1>/dev/null 2>/dev/null 
-		    [ "$sel" = "edit" ] && emacsclient -c "$item" 
+		    [ "$sel" = "edit" ] && vim "$item" 
 		    ;;
     *)
     		sel=$(printf "cd\nemacs\nvim\nacme\ncat\n" | 91menu)

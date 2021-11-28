@@ -114,16 +114,17 @@ create_list (){
 }
 
 create_title (){
-    anchor="<a href=\"#top\"><\/a>"
     title=$(sed -rn "s/(title \")(.*)(\")/<h1>\2<\/h1>/p" ./html/"$file_name".html)
+    title_tag=$(sed -rn "s/(title \")(.*)(\")/<title>\2<\/title>/p" ./html/"$file_name".html)
     style_sheet="<link rel="stylesheet" href="../style/style.css">"
     sub_title=$(sed -rn "s/header/<small>$author \| $date<\/small>/p" ./html/"$file_name".html)
     sed -in "1,4d" ./html/"$file_name".html
+    # these inserts all happen in one sed command so just insert in first line
     sed -i "
-    1i $style_sheet
-    2i $title
-    3i $sub_title
-    4i $anchor
+    1 i $style_sheet
+    1 i $title_tag
+    1 i $title
+    1 i $sub_title
     " ./html/"$file_name".html
 }
 
