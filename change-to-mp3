@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for i in ./*; do
+	result=$(echo "$i" | grep -e "mp4$\|webm$")
+	printf "%s is being converted ...\n" $i
+	if [ -n "$result" ]; then
+		ffmpeg -hide_banner -loglevel error -i "$i" "$i".mp3
+	fi
+done

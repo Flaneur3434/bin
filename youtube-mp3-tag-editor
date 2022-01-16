@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Get youtube url
+# Check if it is a music video
+# If it is check if user wants to keep the video
+# Save file with all thumbnail
+# Call eyeD3 to edit tags
+# Call 91menu with directory options to move the music video to
+# Add option to make new directory
+
+
+youtube_url="$1"
+read -e -p "Is this a music video? (y/n): " music_video_check
+
+if [[ $music_video_check != "y" ]]; then
+	yt-dlp "$1"
+else
+	read -e -p "Save video? (y/n): " save_video_check
+	if [[ $save_video_check == "y" ]]; then
+		yt-dlp --embed-thumbnail \
+			   --extract-audio \
+			   --audio-format mp3 \
+			   --audio-quality 0 \
+			   --output '%(title)s-%(uploader)s.%(ext)s' \
+			   --keep-video "$1"
+	else
+		yt-dlp --embed-thumbnail \
+			   --extract-audio \
+			   --audio-format mp3 \
+			   --audio-quality 0 \
+			   --output '%(title)s-%(uploader)s.%(ext)s' \
+			   --no-keep-video "$1"
+	fi
+
+	read -e -p "Which file: " mp3_file
+	read -e -p "Title: " title_tag
+	read -e -p "Artist: " artist_tag
+	read -e -p "Album: " album_tag
+
+	eyeD3 --title "$title_tag" --artist "$artist_tag" --album "$album_tag" "$mp3_file"
+
+	read -e -p "Move to ~/Music? (y/n): " move_mp3_check
+	if [[ $move_mp3_check == "y" ]]; then
+		sel=$(ls ~/Music | 91menu)
+		mv "$mp3_file" "/home/ken_nc/Music/$sel/"
+	fi
+fi

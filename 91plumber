@@ -1,6 +1,17 @@
 #!/bin/bash
 
+if [ -x /usr/bin/sw ]; then
+	swallowthis="sw"
+else
+	swallowthis=""
+fi
+
 item=$(xclip -o -selection primary)
+
+PID=$(xprop -id "$(xprop -root | awk '/_NET_ACTIVE_WINDOW\(WINDOW\)/{print $NF}')" | grep -m 1 PID | cut -d " " -f 3)
+PID=$(echo "$(pstree -lpA "$PID" | tail -n 1)" | awk -F'---' '{print $NF}' | sed -re 's/[^0-9]//g')
+cd "$(readlink /proc/"$PID"/cwd)"
+
 directory=$PWD
 
 find_whatever ()
@@ -11,7 +22,7 @@ find_whatever ()
   # if current dir is not /home/$USER/
   if [[ $curr_dir != "" ]]; then
     list_dir=$(walk /home/$USER/$curr_dir | grep "$1$")
-  else 
+  else
     if ls -ld "$1" | grep -q "^d" ; then
       cd $1
     fi
@@ -28,48 +39,47 @@ find_whatever ()
 case $item in
     *\.jpg | *\.png)
         sel=$(printf "sxiv\npage\nfeh" | 91menu)
-        [ "$sel" = "sxiv" ] && $(sxiv "$item" &>/dev/null)
-        [ "$sel" = "page" ] && $(page "$item" &>/dev/null)
-        [ "$sel" = "feh" ] && $(feh "$item" &>/dev/null)
+        [ "$sel" = "sxiv" ] && $($swallowthis firejail sxiv -ap "$item" &>/dev/null)
+        [ "$sel" = "page" ] && $($swallowthis firejail page "$item" &>/dev/null)
+        [ "$sel" = "feh" ] && $($swallowthis firejail feh "$item" &>/dev/null)
         ;;
-    *\.mp4 | *\.mp3 | *\.webm | *\.mov | *\.mkv | *\.gif)
+    *\.mp4 | *\.webm | *\.mov | *\.mkv | *\.gif)
         sel=$(printf "mpv\n" | 91menu)
-        [ "$sel" = "mpv" ] && $(mpv "$item" &>/dev/null)
+        [ "$sel" = "mpv" ] && $($swallowthis mpv "$item" &>/dev/null)
         ;;
+	*\.mp3)
+		sel=$(printf "mpv\n" | 91menu)
+		[ "$sel" = "mpv" ] && $(mpv "$item" &>/dev/null)
+		;;
     *\.pdf | *\.epub)
         sel=$(printf "zathura\nmupdf" | 91menu)
-        [ "$sel" = "zathura" ] && $(zathura "$item" &>/dev/null)
-        [ "$sel" = "mupdf" ] && $(mupdf "$item" &>/dev/null)
+        [ "$sel" = "zathura" ] && $($swallowthis zathura "$item" &>/dev/null)
+        [ "$sel" = "mupdf" ] && $($swallowthis mupdf "$item" &>/dev/null)
         ;;
     *\.chm)
         sel=$(printf "xchm" | 91menu)
-        [ "$sel" = "xchm" ] && $(xchm "$1" 2>/dev/null)
+        [ "$sel" = "xchm" ] && $($swallowthis firejail xchm "$1" 2>/dev/null)
         ;;
-    *:+([0-9]):*([0-9])*([:]))
-		    sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
-		    [ "$sel" = "emacs" ] && emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
-		    [ "$sel" = "vim" ] && vim +$(echo -n $item | awk -F: '{print $2}') $(echo -n $item | awk -F: '{print $1}')
-		    [ "$sel" = "acme" ] && acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
-        [ "$sel" = "cat" ] && cat -n $(echo $item | awk -F: '{print $1}') | rg -C10 "^ *$(echo $item | awk -F: '{print $2}')"
-		    ;;
+     *:+([0-9]):*([0-9])*([:]))
+		sel=$(printf "emacs\nvim\nacme\ncat\n" | 91menu)
+		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
+		[ "$sel" = "vim" ] && $swallowthis vim +$(echo -n $item | awk -F: '{print $2}') $(echo -n $item | awk -F: '{print $1}')
+		[ "$sel" = "acme" ] && $swallowthis acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
+		[ "$sel" = "cat" ] && cat -n $(echo $item | awk -F: '{print $1}') | rg -C10 "^ *$(echo $item | awk -F: '{print $2}')"
+		;;
 	  *\.html | *\.css)
-		    sel=$(printf "firefox\nchromium\nedit\n" | 91menu)
-		    [ "$sel" = "firefox" ] && librewolf "$item" 1>/dev/null 2>/dev/null
-		    [ "$sel" = "chromium" ] && chromium "$item" 1>/dev/null 2>/dev/null 
-		    [ "$sel" = "edit" ] && vim "$item" 
-		    ;;
+		sel=$(printf "firefox\nchromium\nedit\n" | 91menu)
+		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item" 1>/dev/null 2>/dev/null
+		[ "$sel" = "chromium" ] && $swallowthis chromium "$item" 1>/dev/null 2>/dev/null
+		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$item"
+		;;
     *)
-    		sel=$(printf "cd\nemacs\nvim\nacme\ncat\n" | 91menu)
+    	sel=$(printf "cd\nemacs\nvim\nacme\ncat\n" | 91menu)
         [ "$sel" = "cd" ] && find_whatever "$item"
-        [ "$sel" = "acme" ] && acme-start.sh "$item"
-        [ "$sel" = "emacs" ] && emacsclient -c "$item"
-        [ "$sel" = "vim" ] && vim "$item"
+        [ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$item"
+        [ "$sel" = "vim" ] && $swallowthis vim "$item"
         [ "$sel" = "cat" ] && cat "$item"
+		;;
 esac
-
-
-unset item
-unset directory
-unset sel
 
 kill 0
