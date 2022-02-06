@@ -32,7 +32,8 @@ else
 			   --no-keep-video "$1"
 	fi
 
-	read -e -p "Which file: " mp3_file
+	printf "Which file: \n"
+	mp3_file="$(ls ./ | fzy -p '> ')"
 	read -e -p "Title: " title_tag
 	read -e -p "Artist: " artist_tag
 	read -e -p "Album: " album_tag
@@ -41,7 +42,7 @@ else
 
 	read -e -p "Move to ~/Music? (y/n): " move_mp3_check
 	if [[ $move_mp3_check == "y" ]]; then
-		sel=$(ls ~/Music | 91menu)
-		mv "$mp3_file" "/home/ken_nc/Music/$sel/"
+		sel=$(walk ~/Music | sor 'test -d' | fzy -p '> ')
+		mv "$mp3_file" "$sel/"
 	fi
 fi

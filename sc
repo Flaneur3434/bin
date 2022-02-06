@@ -1,7 +1,7 @@
 #!/bin/sh
 
 inflags=yes
-flags=""
+flags="-i"
 while [ $# != 0 -a $inflags = yes ]
 do
 	case "$1" in
@@ -29,11 +29,12 @@ case $# in
 	exit 1
 	;;
 1)
+	echo "nigg"
 	pattern="$1"
-	files=`/bin/ls *.[bcChlmsy] *.asm *.cc *.cs *.lx *.cgi *.pl *.py *.tex *.ms *.java *.xy *.go *.goc *.sh *.html *.css *.org 2>/dev/null |
-		9 grep -v '\.tab?\.[ch]$'`
+	9 ls * | 9 grep $flags -- "$pattern"
 	;;
 *)
+	echo "err"
 	pattern="$1"
 	shift
 	files="$@"
