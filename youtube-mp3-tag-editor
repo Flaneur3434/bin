@@ -8,41 +8,73 @@
 # Call 91menu with directory options to move the music video to
 # Add option to make new directory
 
+help_message (){
+	cat <<EOF
+USEAGE: youtube [OPTION]
+  -h, --help              Print help message
+  url                     url of video or playlist
+EXAMPLE:
+  youtube https://www.youtube.com/watch?v=YRNKjQg6y-c
+EOF
+}
 
-youtube_url="$1"
-read -e -p "Is this a music video? (y/n): " music_video_check
+download_vid (){
+	youtube_url="$1"
+	read -e -p "Is this a music video? (y/n): " music_video_check
 
-if [[ $music_video_check != "y" ]]; then
-	yt-dlp "$1"
-else
-	read -e -p "Save video? (y/n): " save_video_check
-	if [[ $save_video_check == "y" ]]; then
-		yt-dlp --embed-thumbnail \
-			   --extract-audio \
-			   --audio-format mp3 \
-			   --audio-quality 0 \
-			   --output '%(title)s-%(uploader)s.%(ext)s' \
-			   --keep-video "$1"
+	if [[ $music_video_check != "y" ]]; then
+		yt-dlp --yes-playlist \
+			   --skip-playlist-after-errors 4 \
+			   "$youtube_url"
 	else
-		yt-dlp --embed-thumbnail \
-			   --extract-audio \
-			   --audio-format mp3 \
-			   --audio-quality 0 \
-			   --output '%(title)s-%(uploader)s.%(ext)s' \
-			   --no-keep-video "$1"
+		read -e -p "Save video? (y/n): " save_video_check
+		if [[ $save_video_check == "y" ]]; then
+			yt-dlp --embed-thumbnail \
+				   --extract-audio \
+				   --audio-format mp3 \
+				   --audio-quality 0 \
+				   --output '%(title)s-%(uploader)s.%(ext)s' \
+				   --yes-playlist \
+				   --skip-playlist-after-errors 4 \
+				   --keep-video \
+				   "$youtube_url"
+		else
+			yt-dlp --embed-thumbnail \
+				   --extract-audio \
+				   --audio-format mp3 \
+				   --audio-quality 0 \
+				   --output '%(title)s-%(uploader)s.%(ext)s' \
+				   --yes-playlist \
+				   --skip-playlist-after-errors 4 \
+				   --no-keep-video \
+				   "$youtube_url"
+		fi
+
+		printf "Which file: \n"
+		mp3_file="$(ls ./ | fzy -p '> ')"
+		read -e -p "Title: " title_tag
+		read -e -p "Artist: " artist_tag
+		read -e -p "Album: " album_tag
+
+		eyeD3 --title "$title_tag" --artist "$artist_tag" --album "$album_tag" "$mp3_file"
+
+		read -e -p "Move to ~/Music? (y/n): " move_mp3_check
+		if [[ $move_mp3_check == "y" ]]; then
+			sel=$(walk ~/Music | sor 'test -d' | fzy -p '> ')
+			mv "$mp3_file" "$sel/"
+		fi
 	fi
+}
 
-	printf "Which file: \n"
-	mp3_file="$(ls ./ | fzy -p '> ')"
-	read -e -p "Title: " title_tag
-	read -e -p "Artist: " artist_tag
-	read -e -p "Album: " album_tag
-
-	eyeD3 --title "$title_tag" --artist "$artist_tag" --album "$album_tag" "$mp3_file"
-
-	read -e -p "Move to ~/Music? (y/n): " move_mp3_check
-	if [[ $move_mp3_check == "y" ]]; then
-		sel=$(walk ~/Music | sor 'test -d' | fzy -p '> ')
-		mv "$mp3_file" "$sel/"
-	fi
-fi
+while [[ ! $# == 0 ]]
+do
+    case "$1" in
+        -h | --help)
+			help_message
+            ;;
+        *)
+            download_vid "$1"
+            ;;
+    esac
+    shift
+done
