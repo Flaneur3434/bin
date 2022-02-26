@@ -1,0 +1,25 @@
+#!/bin/bash
+
+convert_img ()
+{
+    read -e -p "Output Format(jpg / png): " o_format
+    read -e -p "Input Format(webp / jpg / png): " i_format
+    read -e -p "Current Directory: " current
+    if [[ "$current" != "y" ]]; then
+        read -e -p "Directory: " $directory
+        cd $directory
+    fi
+    # magick mogrify -format JPEG -path OUTPUT *.webp
+    if [[ $(ls | gp -c "$i_format$") -ge 1 ]]; then
+        printf "Stand by ...\n"
+        magick mogrify -format $o_format *.$i_format
+        rm *.$i_format
+    else
+        echo "No $i_format file found"
+    fi
+    if [[ -n "$directory" ]]; then
+        cd -
+    fi
+}
+
+convert_img

@@ -4,3 +4,4 @@ bluetooth_startup.sh
 lsix
 no_laptop.sh
 backup
+signing_helper.sh

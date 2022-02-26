@@ -1,0 +1,33 @@
+#!/bin/bash
+
+convert_vid ()
+{
+    read -e -p "Output Format(mp4 / webm): " o_format
+    read -e -p "Input Format(m4v / mp4 / webm): " i_format
+    read -e -p "Current Directory: " current
+    if [[ "$current" == "y" ]]; then
+        directory=$(pwd)
+    else
+        read -e -p "Directory: " directory
+        cd $directory
+    fi
+    if [[ $o_format == $i_format ]]; then
+        echo "input and output format is the same"
+        return 0
+    fi
+    for vid_file in "$directory"/*
+    do
+        if [[ "$vid_file" =~ "$i_format" ]]; then
+            vid_name=$(echo "$vid_file" | sed -nr "s/(.*)(\.$i_format)/\1/p")
+            ffmpeg -i "$vid_file" "$vid_name.$o_format"
+            rm "$vid_file"
+        else
+            echo "File(s) not found"
+        fi
+    done
+    if [[ "$directory" != "$(pwd)" ]]; then
+        cd -
+    fi
+}
+
+convert_vid

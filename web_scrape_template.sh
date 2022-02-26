@@ -9,9 +9,9 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains strangewalker.nobody.jp \
+ --domains www.catb.org \
  --no-parent \
-https://strangewalker.nobody.jp/
+http://www.catb.org/~esr/faqs/hacker-howto.html#basic_skills
 
 
 # wget \

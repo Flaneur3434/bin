@@ -1,0 +1,15 @@
+#!/bin/bash
+
+for vid in *; do
+	ffmpeg -y -i "$vid" \
+				 -vf vidstabtransform,unsharp=5:5:0.8:3:3:0.4 ${vid%.*}_oneStep.mp4
+	ffmpeg -y -i "$vid" \
+				 -vf vidstabdetect=stepsize=32:shakiness=10:accuracy=10:result=transforms.trf -f null -
+	ffmpeg -y -i "$vid" \
+				 -vf vidstabtransform=input=transforms.trf:zoom=0:smoothing=10,unsharp=5:5:0.8:3:3:0.4 \
+				 -vcodec libx264 -tune film -acodec copy -preset slow  \
+				 ${vid%.*}_twoSteps.mp4
+	rm transforms.trf
+	rm ${vid%.*}_oneStep.mp4
+	mv ${vid%.*}_twoSteps.mp4 "$vid_stab"
+done

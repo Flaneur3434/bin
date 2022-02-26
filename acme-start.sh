@@ -6,6 +6,7 @@ export acmeshell=$PLAN9/bin/rc
 export TERM=dumb
 export PAGER=nobs
 export BROWSER=chrome
+export tabstop=4
 
 font='/mnt/font/GoMono/10a/font'
 # font='/mnt/font/LucidaGrande/16a/font'

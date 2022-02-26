@@ -29,12 +29,10 @@ case $# in
 	exit 1
 	;;
 1)
-	echo "nigg"
 	pattern="$1"
 	9 ls * | 9 grep $flags -- "$pattern"
 	;;
 *)
-	echo "err"
 	pattern="$1"
 	shift
 	files="$@"
