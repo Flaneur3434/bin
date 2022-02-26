@@ -1,7 +1,9 @@
 #!/bin/bash
+shopt -s extglob;
 
 if [ -x /usr/bin/sw ]; then
-	swallowthis="sw"
+	# swallowthis="sw"
+	swallowthis=""
 else
 	swallowthis=""
 fi
@@ -10,20 +12,34 @@ item=$(xclip -o -selection primary)
 
 find_whatever ()
 {
-  # get root directory /home/$USER/????/
-  curr_dir=$(echo $PWD | awk -F / '{print $4}')
+	# get root directory /home/$USER/????/
+	curr_dir=$(echo $PWD | awk -F / '{print $4}')
 
-  # if current dir is not /home/$USER/
-  if [[ $curr_dir != "" ]]; then
-	  #list_dir=$(walk /home/$USER/$curr_dir | grep "$1$" | sor 'test -d')
-	  list_dir=$(find . -maxdepth 1 -regextype grep -name "$1" -type d)
-  else
-	  cd $item
-	  return
-  fi
+	# if current dir is not /home/$USER/
+	if [[ $curr_dir != "" ]]; then
+		list_dir=$(find . -maxdepth 1 -regextype grep -name "$1" -type d)
+	else
+		cd $item
+		return
+	fi
 
-  sel=$(printf "$list_dir" | 91menu)
-  cd $sel
+	sel=$(printf "$list_dir" | 91menu)
+	cd $sel
+}
+
+find_context ()
+{
+	linenum=$(echo $1 | awk -F: '{printf "%s", $2}')
+	filename=$(echo $1 | awk -F: '{printf "%s", $1}')
+	if [[ $linenum -lt 10 ]]; then
+		head -n $linenum "$filename"
+	elif [[ $linenum -gt $(wc -l <"$filename") ]]; then
+		tail -n $(($(wc -l <"$filename") - $linenum))
+	else
+		range1=$(($linenum - 10))
+		range2=$(($linenum + 10))
+		sed -n "$range1","$range2"p "$filename"
+	fi
 }
 
 case $item in
@@ -50,39 +66,28 @@ case $item in
         sel=$(printf "xchm" | 91menu)
         [ "$sel" = "xchm" ] && $($swallowthis firejail xchm "$1" 2>/dev/null)
         ;;
-     *:+([0-9]):*([0-9])*([:]))
-		sel=$(printf "emacs\nvim\nacme\ncontext" | 91menu)
-		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
-		[ "$sel" = "vim" ] && $swallowthis vim +$(echo -n $item | awk -F: '{print $2}') $(echo -n $item | awk -F: '{print $1}')
-		[ "$sel" = "acme" ] && $swallowthis acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
-		if [[ "$sel" = "context" ]]; then
-			# this works if the grep print out style is gnu but not if it was plan9 cause gnu output in one line no spaces
-			# [ "$sel" = "context" ] && grep --line-number --color -C5 "$(echo $item | awk -F: '{printf "%s", $3}')" "$(echo $item | awk -F: '{printf "%s", $1}')"
-			# this method is more portable but slower also no color
-			linenum=$(echo $item | awk -F: '{printf "%s", $2}')
-			filename=$(echo $item | awk -F: '{printf "%s", $1}')
-			if [[ $linenum -lt 10 ]]; then
-				head -n $linenum "$filename"
-			elif [[ $linenum -gt $(wc -l <"$filename") ]]; then
-				tail -n $(($(wc -l <"$filename") - $linenum))
-			else
-				range1=$(($linenum - 10))
-				range2=$(($linenum + 10))
-				sed -n "$range1","$range2"p "$filename"
-			fi
-		fi
-		;;
-	  *\.html | *\.css | *\.htm)
+	*\.html | *\.css | *\.htm)
 		sel=$(printf "firefox\nchromium\nedit" | 91menu)
 		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item" 1>/dev/null 2>/dev/null
 		[ "$sel" = "chromium" ] && $swallowthis chromium "$item" 1>/dev/null 2>/dev/null
 		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$item"
 		;;
+	https?(:)//*)
+		sel=$(printf "firefox\nchrome" | 91menu)
+		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item"
+		[ "$sel" = "chrome" ] && $swallowthis chromium "$item"
+		;;
+	*:+([0-9]):*([0-9])*([:]) )
+		sel=$(printf "emacs\nvim\nacme\ncontext" | 91menu)
+		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
+		[ "$sel" = "vim" ] && $swallowthis vim +$(echo -n $item | awk -F: '{print $2}') $(echo -n $item | awk -F: '{print $1}')
+		[ "$sel" = "acme" ] && $swallowthis acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
+		[ "$sel" = "context" ] && find_context "$item"
+		;;
     *)
-    	sel=$(printf "cd\nemacs\nvim\ncat\nwc\nless" | 91menu)
-        [ "$sel" = "cd" ] && find_whatever "$item"
+    	sel=$(printf "cat\nemacs\nless\nplumber\nwc" | 91menu)
         [ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$item"
-        [ "$sel" = "vim" ] && vim "$item"
+        [ "$sel" = "plumber" ] && X11-plumber
         [ "$sel" = "cat" ] && cat "$item"
         [ "$sel" = "wc" ] && 9 wc "$item" | awk '{printf "%s | lines: %s\twords: %s\tbytes: %s\n", $4, $1, $2, $3}'
         [ "$sel" = "less" ] && less "$item"
