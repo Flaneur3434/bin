@@ -2,30 +2,13 @@
 shopt -s extglob;
 
 if [ -x /usr/bin/sw ]; then
-	# swallowthis="sw"
-	swallowthis=""
+	swallowthis="sw"
 else
 	swallowthis=""
 fi
 
 item=$(xclip -o -selection primary)
 
-find_whatever ()
-{
-	# get root directory /home/$USER/????/
-	curr_dir=$(echo $PWD | awk -F / '{print $4}')
-
-	# if current dir is not /home/$USER/
-	if [[ $curr_dir != "" ]]; then
-		list_dir=$(find . -maxdepth 1 -regextype grep -name "$1" -type d)
-	else
-		cd $item
-		return
-	fi
-
-	sel=$(printf "$list_dir" | 91menu)
-	cd $sel
-}
 
 find_context ()
 {
@@ -42,35 +25,29 @@ find_context ()
 	fi
 }
 
+full_path=$(find -O3 ./ -name "$item" -type f -print 2>/dev/null | 91menu)
+
 case $item in
     *\.jpg | *\.png)
         sel=$(printf "sxiv\npage\nfeh" | 91menu)
-        [ "$sel" = "sxiv" ] && $($swallowthis firejail sxiv -ap "$item" &>/dev/null)
-        [ "$sel" = "page" ] && $($swallowthis firejail page "$item" &>/dev/null)
-        [ "$sel" = "feh" ] && $($swallowthis firejail feh "$item" &>/dev/null)
+        [ "$sel" = "sxiv" ] && $($swallowthis firejail sxiv -ap "$full_path" &>/dev/null)
+        [ "$sel" = "page" ] && $($swallowthis firejail page "$full_path" &>/dev/null)
+        [ "$sel" = "feh" ] && $($swallowthis firejail feh "$full_path" &>/dev/null)
         ;;
-    *\.mp4 | *\.webm | *\.mov | *\.mkv | *\.gif)
+    *\.mp4 | *\.webm | *\.mov | *\.mkv | *\.gif | *\.mp3)
         sel=$(printf "mpv\n" | 91menu)
-        [ "$sel" = "mpv" ] && $($swallowthis mpv "$item" &>/dev/null)
+        [ "$sel" = "mpv" ] && $swallowthis mpv "$full_path" &>/dev/null
         ;;
-	*\.mp3)
-		sel=$(printf "mpv\n" | 91menu)
-		[ "$sel" = "mpv" ] && $(mpv "$item" &>/dev/null)
-		;;
     *\.pdf | *\.epub)
         sel=$(printf "zathura\nmupdf" | 91menu)
-        [ "$sel" = "zathura" ] && $($swallowthis zathura "$item" &>/dev/null)
-        [ "$sel" = "mupdf" ] && $($swallowthis mupdf "$item" &>/dev/null)
-        ;;
-    *\.chm)
-        sel=$(printf "xchm" | 91menu)
-        [ "$sel" = "xchm" ] && $($swallowthis firejail xchm "$1" 2>/dev/null)
+        [ "$sel" = "zathura" ] && $swallowthis zathura "$full_path" &>/dev/null
+        [ "$sel" = "mupdf" ] && $swallowthis mupdf "$full_path" &>/dev/null
         ;;
 	*\.html | *\.css | *\.htm)
 		sel=$(printf "firefox\nchromium\nedit" | 91menu)
-		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item" 1>/dev/null 2>/dev/null
-		[ "$sel" = "chromium" ] && $swallowthis chromium "$item" 1>/dev/null 2>/dev/null
-		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$item"
+		[ "$sel" = "firefox" ] && $swallowthis librewolf "$full_path" 1>/dev/null 2>/dev/null
+		[ "$sel" = "chromium" ] && $swallowthis chromium "$full_path" 1>/dev/null 2>/dev/null
+		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$full_path"
 		;;
 	https?(:)//*)
 		sel=$(printf "firefox\nchrome" | 91menu)
@@ -79,18 +56,21 @@ case $item in
 		;;
 	*:+([0-9]):*([0-9])*([:]) )
 		sel=$(printf "emacs\nvim\nacme\ncontext" | 91menu)
-		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +$(echo $item | awk -F: '{print $2}') $(echo $item | awk -F: '{print $1}')
-		[ "$sel" = "vim" ] && $swallowthis vim +$(echo -n $item | awk -F: '{print $2}') $(echo -n $item | awk -F: '{print $1}')
-		[ "$sel" = "acme" ] && $swallowthis acme-start.sh "$(echo $item | awk -F: '{printf "%s:%s", $1, $2}')"
-		[ "$sel" = "context" ] && find_context "$item"
+		file=$(echo $item | awk -F: '{print $1}')
+		linenum=$(echo $item | awk -F: '{print $2}')
+		full_path=$(find -O3 ./ -name "$file" -type f -print 2>/dev/null | 91menu)
+		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +"$linenum" "$full_path"
+		[ "$sel" = "vim" ] && $swallowthis vim +$linenum $full_path
+		[ "$sel" = "acme" ] && $swallowthis acme-start.sh $full_path:$linenum
+		[ "$sel" = "context" ] && find_context $full_path
 		;;
     *)
     	sel=$(printf "cat\nemacs\nless\nplumber\nwc" | 91menu)
-        [ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$item"
+        [ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$full_path"
         [ "$sel" = "plumber" ] && X11-plumber
-        [ "$sel" = "cat" ] && cat "$item"
-        [ "$sel" = "wc" ] && 9 wc "$item" | awk '{printf "%s | lines: %s\twords: %s\tbytes: %s\n", $4, $1, $2, $3}'
-        [ "$sel" = "less" ] && less "$item"
+        [ "$sel" = "cat" ] && cat "$full_path"
+        [ "$sel" = "wc" ] && 9 wc "$full_path" | awk '{printf "%s | lines: %s\twords: %s\tbytes: %s\n", $4, $1, $2, $3}'
+        [ "$sel" = "less" ] && less "$full_path"
 		;;
 esac
 
