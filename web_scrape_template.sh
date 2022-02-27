@@ -9,9 +9,9 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains www.catb.org \
+ --domains lyrical.bugyo.tk \
  --no-parent \
-http://www.catb.org/~esr/faqs/hacker-howto.html#basic_skills
+http://lyrical.bugyo.tk/
 
 
 # wget \

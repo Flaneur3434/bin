@@ -1,15 +1,6 @@
 #!/bin/bash
 shopt -s extglob;
 
-if [ -x /usr/bin/sw ]; then
-	swallowthis="sw"
-else
-	swallowthis=""
-fi
-
-item=$(xclip -o -selection primary)
-
-
 find_context ()
 {
 	linenum=$(echo $1 | awk -F: '{printf "%s", $2}')
@@ -25,14 +16,22 @@ find_context ()
 	fi
 }
 
-full_path=$(find -O3 ./ -name "$item" -type f -print 2>/dev/null | 91menu)
+if [ -x /usr/bin/sw ]; then
+	swallowthis="sw"
+else
+	swallowthis=""
+fi
+
+item=$(xclip -o -selection primary)
+full_path="$1/$item"
+dir_p=1
 
 case $item in
     *\.jpg | *\.png)
         sel=$(printf "sxiv\npage\nfeh" | 91menu)
-        [ "$sel" = "sxiv" ] && $($swallowthis firejail sxiv -ap "$full_path" &>/dev/null)
-        [ "$sel" = "page" ] && $($swallowthis firejail page "$full_path" &>/dev/null)
-        [ "$sel" = "feh" ] && $($swallowthis firejail feh "$full_path" &>/dev/null)
+        [ "$sel" = "sxiv" ] && $swallowthis firejail sxiv -ap "$full_path" &>/dev/null
+        [ "$sel" = "page" ] && $swallowthis firejail page "$full_path" &>/dev/null
+        [ "$sel" = "feh" ] && $swallowthis firejail feh "$full_path" &>/dev/null
         ;;
     *\.mp4 | *\.webm | *\.mov | *\.mkv | *\.gif | *\.mp3)
         sel=$(printf "mpv\n" | 91menu)
@@ -43,10 +42,10 @@ case $item in
         [ "$sel" = "zathura" ] && $swallowthis zathura "$full_path" &>/dev/null
         [ "$sel" = "mupdf" ] && $swallowthis mupdf "$full_path" &>/dev/null
         ;;
-	*\.html | *\.css | *\.htm)
+	*\.html | *\.css)
 		sel=$(printf "firefox\nchromium\nedit" | 91menu)
-		[ "$sel" = "firefox" ] && $swallowthis librewolf "$full_path" 1>/dev/null 2>/dev/null
-		[ "$sel" = "chromium" ] && $swallowthis chromium "$full_path" 1>/dev/null 2>/dev/null
+		[ "$sel" = "firefox" ] && $swallowthis librewolf "$full_path"
+		[ "$sel" = "chromium" ] && $swallowthis chromium "$full_path"
 		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$full_path"
 		;;
 	https?(:)//*)
@@ -65,13 +64,12 @@ case $item in
 		[ "$sel" = "context" ] && find_context $full_path
 		;;
     *)
-    	sel=$(printf "cat\nemacs\nless\nplumber\nwc" | 91menu)
-        [ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$full_path"
-        [ "$sel" = "plumber" ] && X11-plumber
-        [ "$sel" = "cat" ] && cat "$full_path"
-        [ "$sel" = "wc" ] && 9 wc "$full_path" | awk '{printf "%s | lines: %s\twords: %s\tbytes: %s\n", $4, $1, $2, $3}'
-        [ "$sel" = "less" ] && less "$full_path"
+		if [[ -d "$full_path" ]]; then
+			dir_p=0
+		else
+			$swallowthis emacsclient -c "$full_path"
+		fi
 		;;
 esac
 
-kill 0
+exit $dir_p
