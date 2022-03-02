@@ -8,6 +8,8 @@
 # Call 91menu with directory options to move the music video to
 # Add option to make new directory
 
+playlist_flag=""
+
 help_message (){
 	cat <<EOF
 USEAGE: youtube [OPTION]
@@ -20,15 +22,22 @@ EOF
 
 download_vid (){
 	youtube_url="$1"
+	if [[ $youtube_url =~ .*list.* ]]; then
+		playlist_flag="y"
+		read -e -p "Playlist folder name: " folder_name
+		mkdir -p "$folder_name"
+		cd "$folder_name"
+	fi
+
 	read -e -p "Is this a music video? (y/n): " music_video_check
 
-	if [[ $music_video_check != "y" ]]; then
+	if [[ $music_video_check == "n" ]]; then
 		yt-dlp --yes-playlist \
 			   --skip-playlist-after-errors 4 \
 			   "$youtube_url"
 	else
 		read -e -p "Save video? (y/n): " save_video_check
-		if [[ $save_video_check == "y" ]]; then
+		if [[ $save_video_check == "y" || $save_video_check == "" ]]; then
 			yt-dlp --embed-thumbnail \
 				   --extract-audio \
 				   --audio-format mp3 \
@@ -50,18 +59,37 @@ download_vid (){
 				   "$youtube_url"
 		fi
 
-		printf "Which file: \n"
-		mp3_file="$(ls ./ | fzy -p '> ')"
-		read -e -p "Title: " title_tag
-		read -e -p "Artist: " artist_tag
-		read -e -p "Album: " album_tag
+		if [[ $playlist_flag == "y" ]]; then
+			for i in * ; do
+				title_tag="$(echo "$i" | cut -d \- -f 1)"
+				artist_tag="$(echo "$i" | cut -d \- -f 2 | cut -d \. -f 1)"
+				album_tag="idk"
 
-		eyeD3 --title "$title_tag" --artist "$artist_tag" --album "$album_tag" "$mp3_file"
+				eyeD3 --title "$title_tag" \
+					  --artist "$artist_tag" \
+					  --album "$album_tag" "$i"
+			done
+		else
+			mp3_file="$(ls ./ | fzy -p 'Which file: ')"
+			title_tag="$(echo "$i" | cut -d \- -f 1)"
+			artist_tag="$(echo "$i" | cut -d \- -f 2 | cut -d \. -f 1)"
+			album_tag="idk"
+
+			eyeD3 --title "$title_tag" \
+					  --artist "$artist_tag" \
+					  --album "$album_tag" "$mp3_file"
+		fi
 
 		read -e -p "Move to ~/Music? (y/n): " move_mp3_check
-		if [[ $move_mp3_check == "y" ]]; then
+		if [[ $move_mp3_check == "y" || $move_mp3_check == "" ]]; then
 			sel=$(walk ~/Music | sor 'test -d' | fzy -p '> ')
-			mv "$mp3_file" "$sel/"
+			if [[ $playlist_flag == "y" ]]; then
+				mv ./* "$sel/"
+				cd ../
+				rm -rf "$folder_name"
+			else
+				mv "$mp3_file" "$sel/"
+			fi
 		fi
 	fi
 }

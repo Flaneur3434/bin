@@ -16,12 +16,8 @@ find_context ()
 	fi
 }
 
-if [ -x /usr/bin/sw ]; then
-	swallowthis="sw"
-else
-	swallowthis=""
-fi
 
+[ -x /usr/bin/sw ] && swallowthis="sw"
 item=$(xclip -o -selection primary)
 full_path="$1/$item"
 dir_p=1
@@ -42,32 +38,42 @@ case $item in
         [ "$sel" = "zathura" ] && $swallowthis zathura "$full_path" &>/dev/null
         [ "$sel" = "mupdf" ] && $swallowthis mupdf "$full_path" &>/dev/null
         ;;
-	*\.html | *\.css)
+	*\.htm?(l) | *\.css)
 		sel=$(printf "firefox\nchromium\nedit" | 91menu)
-		[ "$sel" = "firefox" ] && $swallowthis librewolf "$full_path"
-		[ "$sel" = "chromium" ] && $swallowthis chromium "$full_path"
-		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$full_path"
+		[ "$sel" = "firefox" ] && $swallowthis librewolf "$full_path" &>/dev/null
+		[ "$sel" = "chromium" ] && $swallowthis chromium "$full_path" &>/dev/null
+		[ "$sel" = "edit" ] && $swallowthis emacsclient -c "$full_path" &>/dev/null
 		;;
-	https?(:)//*)
+	http?(s)://*)
 		sel=$(printf "firefox\nchrome" | 91menu)
-		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item"
-		[ "$sel" = "chrome" ] && $swallowthis chromium "$item"
+		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item" &>/dev/null
+		[ "$sel" = "chrome" ] && $swallowthis chromium "$item" &>/dev/null
 		;;
-	*:+([0-9]):*([0-9])*([:]) )
+	+([[:ascii:]])\.*)
+		sel=$(printf "emacs\nvim\nacme" | 91menu)
+		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$full_path"
+		[ "$sel" = "vim" ] && $swallowthis xterm -e vim "$full_path" &>/dev/null
+		[ "$sel" = "acme" ] && $swallowthis acme-start.sh "$full_path"
+		;;
+	+([[:ascii:]]):+([0-9]):*([0-9])?(:) )
 		sel=$(printf "emacs\nvim\nacme\ncontext" | 91menu)
 		file=$(echo $item | awk -F: '{print $1}')
 		linenum=$(echo $item | awk -F: '{print $2}')
-		full_path=$(find -O3 ./ -name "$file" -type f -print 2>/dev/null | 91menu)
-		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +"$linenum" "$full_path"
-		[ "$sel" = "vim" ] && $swallowthis vim +$linenum $full_path
-		[ "$sel" = "acme" ] && $swallowthis acme-start.sh $full_path:$linenum
-		[ "$sel" = "context" ] && find_context $full_path
+		full_path="$1/$file"
+		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c +$linenum "$full_path"
+		[ "$sel" = "vim" ] && $swallowthis xterm -e vim +$linenum "$full_path"
+		[ "$sel" = "acme" ] && $swallowthis acme-start.sh "$full_path":$linenum
+		[ "$sel" = "context" ] && find_context "$item"
 		;;
     *)
 		if [[ -d "$full_path" ]]; then
 			dir_p=0
 		else
-			$swallowthis emacsclient -c "$full_path"
+			if [[ $(file --mime-type "$full_path" | cut -d ' ' -f 2 | cut -d \/ -f 1) == "text" ]]; then
+				$swallowthis emacsclient -c "$full_path"
+			else
+				echo "Could not plumb"
+			fi
 		fi
 		;;
 esac
