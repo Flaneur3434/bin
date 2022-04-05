@@ -1,25 +1,27 @@
 #!/bin/bash
 
-Ctags ()
-{
-  old_path="$PWD"
+old_path="$PWD"
 
-  while [[ ! -f TAGS && "$PWD" != "$HOME" ]]; do
-      cd ..
-  done
 
-  if [[ -f tags ]]; then
-      printf "\'tags\' file found in %s\n", $PWD
-  else
+
+case "$1" in
+	-e | --Emacs)
+		ctags_args=( -f TAGS -R -e --languages= )
+		;;
+	*)
+		ctags_args=( -f TAGS -R -n --languages= )
+		;;
+esac
+
+while [[ ! -f TAGS && "$PWD" != "$HOME" ]]; do
+    cd ..
+done
+
+if [[ -f tags ]]; then
+    printf "\'tags\' file found in %s\n", $PWD
+else
   	echo "could not find tag file in $old_path"
-    read -e -p "create tags?: " up
-
-    if [[ $up == "y" || $up == "Y" ]]; then
-      read -e -p "Language?: " lang
-      cd "$old_path"
-      ctags -f tags -R -n --languages="$lang" *
-    fi
-  fi
-}
-
-Ctags
+    read -e -p "Language?: " lang
+    cd "$old_path"
+    ctags "${ctags_args[@]}""$lang" *
+fi

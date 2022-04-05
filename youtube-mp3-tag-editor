@@ -61,8 +61,8 @@ download_vid (){
 
 		if [[ $playlist_flag == "y" ]]; then
 			for i in * ; do
-				title_tag="$(echo "$i" | cut -d \- -f 1)"
 				artist_tag="$(echo "$i" | cut -d \- -f 2 | cut -d \. -f 1)"
+				title_tag="$(echo "$i" | cut -d \- -f 1)"
 				album_tag="idk"
 
 				eyeD3 --title "$title_tag" \
@@ -71,13 +71,13 @@ download_vid (){
 			done
 		else
 			mp3_file="$(ls ./ | fzy -p 'Which file: ')"
-			title_tag="$(echo "$i" | cut -d \- -f 1)"
-			artist_tag="$(echo "$i" | cut -d \- -f 2 | cut -d \. -f 1)"
+			title_tag="$(echo "$mp3_file" | cut -d \- -f 2 | cut -d \. -f 1)"
+			artist_tag="$(echo "$mp3_file" | cut -d \- -f 1)"
 			album_tag="idk"
 
 			eyeD3 --title "$title_tag" \
-					  --artist "$artist_tag" \
-					  --album "$album_tag" "$mp3_file"
+			      --artist "$artist_tag" \
+			      --album "$album_tag" "$mp3_file"
 		fi
 
 		read -e -p "Move to ~/Music? (y/n): " move_mp3_check

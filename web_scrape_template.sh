@@ -9,9 +9,9 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains lyrical.bugyo.tk \
+ --domains www.romanzolotarev.com \
  --no-parent \
-http://lyrical.bugyo.tk/
+https://www.romanzolotarev.com/
 
 
 # wget \

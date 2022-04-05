@@ -49,7 +49,7 @@ case $item in
 		[ "$sel" = "firefox" ] && $swallowthis librewolf "$item" &>/dev/null
 		[ "$sel" = "chrome" ] && $swallowthis chromium "$item" &>/dev/null
 		;;
-	+([[:ascii:]])\.*)
+	+([[:ascii:]])\.+([a-zA-Z]))
 		sel=$(printf "emacs\nvim\nacme" | 91menu)
 		[ "$sel" = "emacs" ] && $swallowthis emacsclient -c "$full_path"
 		[ "$sel" = "vim" ] && $swallowthis xterm -e vim "$full_path" &>/dev/null
