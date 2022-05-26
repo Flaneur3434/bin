@@ -25,9 +25,9 @@ dir_p=1
 case $item in
     *\.jpg | *\.png)
         sel=$(printf "sxiv\npage\nfeh" | 91menu)
-        [ "$sel" = "sxiv" ] && $swallowthis firejail sxiv -ap "$full_path" &>/dev/null
-        [ "$sel" = "page" ] && $swallowthis firejail page "$full_path" &>/dev/null
-        [ "$sel" = "feh" ] && $swallowthis firejail feh "$full_path" &>/dev/null
+        [ "$sel" = "sxiv" ] && $swallowthis sxiv -ap "$full_path" &>/dev/null
+        [ "$sel" = "page" ] && $swallowthis page "$full_path" &>/dev/null
+        [ "$sel" = "feh" ] && $swallowthis feh "$full_path" &>/dev/null
         ;;
     *\.mp4 | *\.webm | *\.mov | *\.mkv | *\.gif | *\.mp3)
         sel=$(printf "mpv\n" | 91menu)

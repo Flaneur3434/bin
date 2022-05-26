@@ -9,9 +9,9 @@ wget \
  --html-extension \
  --convert-links \
  --restrict-file-names=unix \
- --domains www.romanzolotarev.com \
+ --domains www.exoticsilicon.com \
  --no-parent \
-https://www.romanzolotarev.com/
+https://www.exoticsilicon.com/jay/reckless_guide_to_openbsd/dpb
 
 
 # wget \

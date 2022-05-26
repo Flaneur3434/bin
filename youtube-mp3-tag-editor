@@ -71,8 +71,8 @@ download_vid (){
 			done
 		else
 			mp3_file="$(ls ./ | fzy -p 'Which file: ')"
-			title_tag="$(echo "$mp3_file" | cut -d \- -f 2 | cut -d \. -f 1)"
-			artist_tag="$(echo "$mp3_file" | cut -d \- -f 1)"
+			title_tag="$(echo "$mp3_file" | cut -d \- -f 1)"
+			artist_tag="$(echo "$mp3_file" | cut -d \- -f 2 | cut -d \. -f 1)"
 			album_tag="idk"
 
 			eyeD3 --title "$title_tag" \
@@ -106,3 +106,12 @@ do
     esac
     shift
 done
+
+
+# Fix that might be useful somethings
+# for i in *; do
+# artist_tag="$(echo "$i" | cut -d \- -f 1)"
+# title_tag="$(echo "$i" | cut -d \- -f 2 | cut -d \. -f 1)"
+# album_tag="idk"
+# eyeD3 --title "$title_tag" --artist "$artist_tag" --album "$album_tag" "$i"
+# done

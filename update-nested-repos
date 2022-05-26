@@ -1,0 +1,10 @@
+#!/bin/bash
+dir=$(find ./ -name "\.git" -type d | rev | cut -d \. -f 2- | rev)
+
+IFS=$'\n'
+for item in $dir; do
+	cd "$item"
+	printf "%s\n" "$item"
+	git pull
+	cd -
+done

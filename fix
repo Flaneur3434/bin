@@ -1,0 +1,8 @@
+#!/bin/bash
+
+for i in * ; do
+	artist_tag="$(echo "$i" | cut -d \- -f 1)"
+	title_tag="$(echo "$i" | cut -d \- -f 2 | cut -d \. -f 1)"
+	album_tag="idk"
+	eyeD3 --title "$title_tag" --artist "$artist_tag" --album "$album_tag" "$i"
+done
